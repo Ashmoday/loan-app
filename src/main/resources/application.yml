@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/bets
+    url: jdbc:postgresql://localhost:5433/bets
     username: postgres
     password: root
     driver-class-name: org.postgresql.Driver
@@ -11,8 +11,16 @@ spring:
     properties:
       hibernate:
         format_sql: true
-    database: bets
+    database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+    security:
+      oauth2:
+        resourceserver:
+          jwt:
+            issuer-uri: http://localhost:8089
 
 server:
   port: 8088
+  servlet:
+    context-path: /api/
