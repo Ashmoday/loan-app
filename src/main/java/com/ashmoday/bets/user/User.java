@@ -1,5 +1,6 @@
 package com.ashmoday.bets.user;
 
+import com.ashmoday.bets.character.Character;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
