@@ -18,7 +18,7 @@ import lombok.experimental.SuperBuilder;
 @Entity
 public class Character extends BaseEntity {
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private Integer charId;
     @Column(nullable = false)
     private String firstname;
