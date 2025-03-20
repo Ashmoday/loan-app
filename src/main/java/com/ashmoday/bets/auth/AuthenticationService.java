@@ -2,10 +2,16 @@ package com.ashmoday.bets.auth;
 
 import com.ashmoday.bets.character.Character;
 import com.ashmoday.bets.character.CharacterRepository;
+import com.ashmoday.bets.role.Role;
 import com.ashmoday.bets.role.RoleRepository;
+import com.ashmoday.bets.security.JwtService;
 import com.ashmoday.bets.user.User;
 import com.ashmoday.bets.user.UserRepository;
+import com.ashmoday.bets.user.UserRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 
@@ -21,25 +27,28 @@ public class AuthenticationService {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final CharacterRepository characterRepository;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+
 
     public void register(RegistrationRequest request) {
-
-        if (userRepository.findByUcpId(request.getUcpId()).isPresent())
+        UserRequest userRequest = request.getUser();
+        if (userRepository.findByUcpId(userRequest.getId()).isPresent())
         {
             throw new IllegalStateException("User already has an account");
         }
-        var userRole = roleRepository.findByName("USER")
+        Role userRole = roleRepository.findByName("USER")
                 .orElseThrow(() -> new IllegalStateException("ROLE USER was not initialized"));
 
         User user = User.builder()
-                .username(request.getUsername())
-                .ucpId(request.getUcpId())
+                .username(userRequest.getUsername())
+                .ucpId(userRequest.getId())
                 .roles(Set.of(userRole))
                 .build();
 
         userRepository.save(user);
 
-        List<Character> characters = Optional.ofNullable(request.getCharacters())
+        List<Character> characters = Optional.ofNullable(userRequest.getCharacter())
                 .orElse(Collections.emptyList())
                 .stream()
                 .filter(characterRequest -> !characterRepository.existsByCharId(characterRequest.getId()))
@@ -56,4 +65,18 @@ public class AuthenticationService {
             characterRepository.saveAll(characters);
         }
     }
+
+    public AuthenticationResponse authenticate(AuthenticationRequest request)
+    {
+        Authentication auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), null)
+        );
+
+        User user = (User) auth.getPrincipal();
+        String jwtToken = "kkkk";
+
+        return AuthenticationResponse.builder().build();
+    }
+
+
 }
