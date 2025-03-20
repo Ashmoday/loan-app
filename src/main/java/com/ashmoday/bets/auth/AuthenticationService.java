@@ -42,6 +42,7 @@ public class AuthenticationService {
         List<Character> characters = Optional.ofNullable(request.getCharacters())
                 .orElse(Collections.emptyList())
                 .stream()
+                .filter(characterRequest -> !characterRepository.existsByCharId(characterRequest.getId()))
                 .map(characterRequest -> Character.builder()
                         .charId(characterRequest.getId())
                         .firstname(characterRequest.getFirstname())
