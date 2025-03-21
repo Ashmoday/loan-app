@@ -9,6 +9,7 @@ import com.ashmoday.bets.user.User;
 import com.ashmoday.bets.user.UserRepository;
 import com.ashmoday.bets.user.UserRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -33,10 +34,7 @@ public class AuthenticationService {
 
     public void register(RegistrationRequest request) {
         UserRequest userRequest = request.getUser();
-        if (userRepository.findByUcpId(userRequest.getId()).isPresent())
-        {
-            throw new IllegalStateException("User already has an account");
-        }
+
         Role userRole = roleRepository.findByName("USER")
                 .orElseThrow(() -> new IllegalStateException("ROLE USER was not initialized"));
 
