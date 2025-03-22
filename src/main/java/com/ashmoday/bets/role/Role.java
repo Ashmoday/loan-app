@@ -2,11 +2,12 @@ package com.ashmoday.bets.role;
 
 import com.ashmoday.bets.common.BaseEntity;
 import com.ashmoday.bets.user.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import net.minidev.json.annotate.JsonIgnore;
+
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.List;
