@@ -14,11 +14,21 @@ spring:
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
-    security:
-      oauth2:
-        resourceserver:
-          jwt:
-            issuer-uri: http://localhost:8089
+  security:
+    oauth2:
+      client:
+        registration:
+          custom-provider:
+            client-id: teste123
+            client-secret: secret123
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          custom-provider:
+            authorization-uri: http://localhost:8089/oauth/authorize
+            token-uri: http://localhost:8089/oauth/token
+            user-info-uri: http://localhost:8089/oauth/api/user
+            user-name-attribute: id
 
 server:
   port: 8088
@@ -31,3 +41,4 @@ jwt:
     key: classpath:app.pub
   private:
     key: classpath:app.key
+
