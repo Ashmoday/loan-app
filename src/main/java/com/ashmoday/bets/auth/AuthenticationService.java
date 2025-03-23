@@ -9,17 +9,13 @@ import com.ashmoday.bets.user.User;
 import com.ashmoday.bets.user.UserRepository;
 import com.ashmoday.bets.user.UserRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,6 +26,11 @@ public class AuthenticationService {
     private final CharacterRepository characterRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final RestTemplate restTemplate;
+
+
+    @Value("${spring.security.oauth2.client.registration.custom-provider.client-id}")
+    private String clientId;
 
 
     public void register(RegistrationRequest request) {
@@ -64,17 +65,6 @@ public class AuthenticationService {
         }
     }
 
-    public AuthenticationResponse authenticate(AuthenticationRequest request)
-    {
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), null)
-        );
-
-        User user = (User) auth.getPrincipal();
-        String jwtToken = "kkkk";
-
-        return AuthenticationResponse.builder().build();
-    }
 
 
 }
