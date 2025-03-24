@@ -9,6 +9,8 @@ import static org.springframework.http.HttpStatus.NOT_IMPLEMENTED;
 public enum BusinessErrorCodes {
     NO_CODE(0, NOT_IMPLEMENTED, "No code"),
     USER_EXISTS(300, FORBIDDEN, "Username already in use"),
+    BAD_CREDENTIALS(301, FORBIDDEN, "Login and / or password is incorrect"),
+
     ;
     @Getter
     private final int code;
