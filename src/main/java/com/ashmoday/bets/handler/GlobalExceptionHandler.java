@@ -2,9 +2,11 @@ package com.ashmoday.bets.handler;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import static com.ashmoday.bets.handler.BusinessErrorCodes.BAD_CREDENTIALS;
 import static com.ashmoday.bets.handler.BusinessErrorCodes.USER_EXISTS;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
@@ -22,6 +24,18 @@ public class GlobalExceptionHandler {
                                 .error(USER_EXISTS.getDescription())
                                 .build()
                 );
+    }
 
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ExceptionResponse> handleException(BadCredentialsException exp) {
+        return ResponseEntity
+                .status(UNAUTHORIZED)
+                .body(
+                        ExceptionResponse.builder()
+                                .businessErrorCode(BAD_CREDENTIALS.getCode())
+                                .businessErrorDescription(BAD_CREDENTIALS.getDescription())
+                                .error(BAD_CREDENTIALS.getDescription())
+                                .build()
+                );
     }
 }
