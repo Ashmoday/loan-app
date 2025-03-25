@@ -31,7 +31,7 @@ public class Character extends BaseEntity {
 
 
     @ManyToOne
-    @JoinColumn(name = "ucp_id", nullable = false)
+    @JoinColumn(name = "owner_id", nullable = false)
     private User user;
 
     @Transient
