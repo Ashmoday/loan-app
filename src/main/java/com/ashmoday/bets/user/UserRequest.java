@@ -18,6 +18,9 @@ public class UserRequest {
     @NotEmpty(message = "Username is mandatory")
     @NotBlank(message = "Username is mandatory")
     private String username;
+    @NotEmpty(message = "Password is mandatory")
+    @NotBlank(message = "Password is mandatory")
+    private String password;
 
     @NotNull(message = "Ucp is mandatory")
     private Integer id;
