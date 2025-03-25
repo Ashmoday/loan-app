@@ -9,10 +9,14 @@ import com.ashmoday.bets.user.User;
 import com.ashmoday.bets.user.UserRepository;
 import com.ashmoday.bets.user.UserRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+
 
 
 import java.util.*;
@@ -26,11 +30,7 @@ public class AuthenticationService {
     private final CharacterRepository characterRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
-    private final RestTemplate restTemplate;
-
-
-    @Value("${spring.security.oauth2.client.registration.custom-provider.client-id}")
-    private String clientId;
+    private final PasswordEncoder passwordEncoder;
 
 
     public void register(RegistrationRequest request) {
@@ -42,6 +42,7 @@ public class AuthenticationService {
         User user = User.builder()
                 .username(userRequest.getUsername())
                 .ucpId(userRequest.getId())
+                .password(passwordEncoder.encode("123456"))
                 .roles(Set.of(userRole))
                 .build();
 
@@ -65,6 +66,26 @@ public class AuthenticationService {
         }
     }
 
+    public AuthenticationResponse login(AuthenticationRequest authRequest)
+    {
+        var auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        authRequest.getUsername(),
+                        authRequest.getPassword()
+                )
+        );
+        User user = (User) auth.getPrincipal();
+        HashMap<String, Object> claims = new HashMap<String, Object>();
+        claims.put("ucpId", user.getUcpId());
 
 
+        String jwtToken = jwtService.generateToken(
+                claims, user
+        );
+
+        List<Character> characters = characterRepository.findAllByUserId(user.getId());
+        return AuthenticationResponse.builder()
+                .token(jwtToken)
+                .build();
+    }
 }
