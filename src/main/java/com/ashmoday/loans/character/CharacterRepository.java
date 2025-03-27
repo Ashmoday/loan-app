@@ -25,4 +25,13 @@ public interface CharacterRepository extends JpaRepository<Character, Integer>, 
         WHERE c.user.id = :userId
         """)
     List<Character> findAllByUserId(Integer userId);
+
+    @Query("""
+            SELECT c FROM Character c
+            WHERE c = :character
+            AND c.user.id = :userId
+            """)
+    Boolean characterFromUserId(Character character, Integer userId);
+
 }
+
