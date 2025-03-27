@@ -1,6 +1,7 @@
 package com.ashmoday.loans.loan;
 
-import jakarta.persistence.*;
+import com.ashmoday.loans.collateral.Collateral;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,6 +19,10 @@ public class LoanRequest {
     private Integer amount;
     @NotNull
     private Integer weeks;
-    private List<String> collaterals;
+
+    @DecimalMin(value = "1.0")
+    private Double interestRate;
+
+    private List<Collateral> collaterals;
 
 }
