@@ -4,15 +4,20 @@ import com.ashmoday.loans.character.Character;
 import com.ashmoday.loans.character.CharacterRepository;
 import com.ashmoday.loans.collateral.Collateral;
 import com.ashmoday.loans.collateral.CollateralRepository;
+import com.ashmoday.loans.common.PageResponse;
 import com.ashmoday.loans.exception.OperationNotPermittedException;
-import com.ashmoday.loans.role.Role;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import com.ashmoday.loans.user.User;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -81,4 +86,79 @@ public class LoanService {
         loan.setStatus(LoanStatus.WAITING_APPROVAL);
         return loanRepository.save(loan);
     }
+
+    public PageResponse<LoanResponse> findAllPendingLoans(int page, int size, Authentication connectedUser) {
+        User user = (User) connectedUser.getPrincipal();
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Loan> loans = loanRepository.findByStatus(LoanStatus.PENDING, pageable);
+        List<LoanResponse> loanResponse = loans.stream()
+                .map(loanMapper::toLoanResponse)
+                .toList();
+
+        return new PageResponse<>(
+                loanResponse,
+                loans.getNumber(),
+                loans.getSize(),
+                loans.getTotalElements(),
+                loans.getTotalPages(),
+                loans.isFirst(),
+                loans.isLast()
+        );
+
+    }
+
+    public Integer acceptLoan(Integer loanId, Integer charId, Authentication connectedUser) {
+        User user = ((User) connectedUser.getPrincipal());
+        Character character = characterRepository.findById(charId)
+                .orElseThrow(() -> new EntityNotFoundException("Character not found"));
+        boolean ownedCharacter = characterRepository.characterFromUserId(character, user.getId());
+
+        if(!ownedCharacter) throw new OperationNotPermittedException("You don't own this character");
+
+        Loan loan = loanRepository.findByIdAndCharacter(loanId, character)
+                .orElseThrow(() -> new EntityNotFoundException("Loan not found for this character"));
+
+        boolean hasActiveLoan = !loanRepository.findByCharacterAndStatus(character, LoanStatus.ACTIVE).isEmpty()
+                || !loanRepository.findByCharacterAndStatus(character, LoanStatus.PENDING).isEmpty()
+                || !loanRepository.findByCharacterAndStatus(character, LoanStatus.APPROVED).isEmpty()
+                || loanRepository.findByIdAndStatus(loanId, LoanStatus.REJECTED).isPresent();
+
+        if (hasActiveLoan) throw new OperationNotPermittedException("You can't accept a loan while you have another one active");
+
+        loan.setStatus(LoanStatus.APPROVED);
+
+        return loan.getId();
+    }
+
+    public Integer rejectLoan(Integer loanId, Integer charId, Authentication connectedUser) {
+        User user = ((User) connectedUser.getPrincipal());
+        boolean isAdmin = user.getRoles().stream()
+                .anyMatch(role -> role.getName().equals("ADMIN"));
+
+        Character character = characterRepository.findById(charId)
+                .orElseThrow(() -> new EntityNotFoundException("Character not found"));
+        boolean ownedCharacter = characterRepository.characterFromUserId(character, user.getId()) || isAdmin;
+
+        if(!ownedCharacter) throw new OperationNotPermittedException("You don't own this character");
+
+        Loan loan = loanRepository.findById(loanId)
+                .orElseThrow(() -> new EntityNotFoundException("Loan not found for this id:: " + loanId));
+
+        if(!Objects.equals(loan.getCharacter().getId(), character.getId()) && !isAdmin)
+        {
+            throw new OperationNotPermittedException("You cannot edit reject someone else loan");
+        }
+
+        boolean hasActiveLoan = loanRepository.findByIdAndStatus(loanId, LoanStatus.ACTIVE).isPresent()
+                || loanRepository.findByIdAndStatus(loanId, LoanStatus.APPROVED).isPresent()
+                || loanRepository.findByIdAndStatus(loanId, LoanStatus.REJECTED).isPresent();
+
+        if (hasActiveLoan) throw new OperationNotPermittedException("You can't reject and active loan");
+
+        loan.setStatus(LoanStatus.REJECTED);
+        loanRepository.save(loan);
+        return loan.getId();
+    }
+
+    
 }
