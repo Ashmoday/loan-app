@@ -1,6 +1,7 @@
 package com.ashmoday.loans.loan;
 
 import com.ashmoday.loans.character.Character;
+import com.ashmoday.loans.collateral.Collateral;
 import com.ashmoday.loans.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -30,4 +33,6 @@ public class Loan extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private LoanStatus status = LoanStatus.PENDING;
 
+    @OneToMany(mappedBy = "loan")
+    List<Collateral> collaterals;
 }
