@@ -1,9 +1,11 @@
 package com.ashmoday.loans.loan;
 
 import com.ashmoday.loans.character.Character;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
+import com.ashmoday.loans.collateral.CollateralResponse;
+
 import lombok.*;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -17,4 +19,6 @@ public class LoanResponse {
     private Integer weeks;
     private Double interestRate;
     private LoanStatus status;
+    private List<CollateralResponse> collaterals;
+
 }
