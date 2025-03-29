@@ -153,12 +153,12 @@ public class LoanService {
                 || loanRepository.findByIdAndStatus(loanId, LoanStatus.APPROVED).isPresent()
                 || loanRepository.findByIdAndStatus(loanId, LoanStatus.REJECTED).isPresent();
 
-        if (hasActiveLoan) throw new OperationNotPermittedException("You can't reject and active loan");
+        if (hasActiveLoan) throw new OperationNotPermittedException("You can't reject an active loan");
 
         loan.setStatus(LoanStatus.REJECTED);
         loanRepository.save(loan);
         return loan.getId();
     }
 
-    
+
 }
