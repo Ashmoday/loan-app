@@ -30,6 +30,11 @@ spring:
             user-info-uri: http://localhost:8089/oauth/api/user
             user-name-attribute: id
 
+application:
+  security:
+    jwt:
+      secret-key: 50ff54f698648eb755dd8cf9fcdc5b625e4d1e583733725d5c89b7573c268d0de7bc8b2fcbc50c42c75a65d192e64c0635ede38b6631832f6af26d2267481427dced6db99b468ef17d4537a1716ed811ff8d3caca3e1b5db147df50cbbe98daa52cf0b7254ff414a68b28833ecb7e3296db58f8e3fdbc1298f9ea3a99b41631c2d2dffc0340e2f6099cb5281f350d3d213babd64af4c8d7018f057d81567a9f72c4878e87b6058b18a185b23781b4a271d96ea587cfca6bb57e37a17dd8a401f93af979e14c25ff96bccb4493fd1661c86d8ac422b74bd7f1829119aaf1ca23819f0345b80b9038fc754710375442b6df3c4b98d58ac818b08a83c14b9f47588
+      expiration: 8640000
 server:
   port: 8088
   servlet:
