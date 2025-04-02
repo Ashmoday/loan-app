@@ -16,6 +16,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import com.ashmoday.loans.user.User;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -158,6 +161,17 @@ public class LoanService {
         loan.setStatus(LoanStatus.REJECTED);
         loanRepository.save(loan);
         return loan.getId();
+    }
+
+
+    public LocalDate getNextSaturday() {
+        LocalDate today = LocalDate.now();
+
+        if (today.getDayOfWeek() == DayOfWeek.SATURDAY) {
+            return today.plusWeeks(1);
+        }
+
+        return today.with(TemporalAdjusters.next(DayOfWeek.SATURDAY));
     }
 
 
