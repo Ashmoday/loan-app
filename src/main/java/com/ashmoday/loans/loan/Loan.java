@@ -3,6 +3,7 @@ package com.ashmoday.loans.loan;
 import com.ashmoday.loans.character.Character;
 import com.ashmoday.loans.collateral.Collateral;
 import com.ashmoday.loans.common.BaseEntity;
+import com.ashmoday.loans.loanPayment.LoanInstallment;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,4 +36,8 @@ public class Loan extends BaseEntity {
 
     @OneToMany(mappedBy = "loan")
     List<Collateral> collaterals;
+    @OneToMany(mappedBy = "loan")
+    List<LoanInstallment> loanInstallments;
+
+
 }
