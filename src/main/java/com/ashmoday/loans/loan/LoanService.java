@@ -6,8 +6,12 @@ import com.ashmoday.loans.collateral.Collateral;
 import com.ashmoday.loans.collateral.CollateralRepository;
 import com.ashmoday.loans.common.PageResponse;
 import com.ashmoday.loans.exception.OperationNotPermittedException;
+import com.ashmoday.loans.loanPayment.InstallmentStatus;
+import com.ashmoday.loans.loanPayment.LoanInstallment;
+import com.ashmoday.loans.loanPayment.LoanInstallmentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +22,9 @@ import com.ashmoday.loans.user.User;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -30,6 +36,7 @@ public class LoanService {
     private final CharacterRepository characterRepository;
     private final LoanMapper loanMapper;
     private final CollateralRepository collateralRepository;
+    private final LoanInstallmentRepository loanInstallmentRepository;
 
     public Loan requestLoan(LoanRequest request, Integer charId, Authentication connectedUser) {
         User user = ((User) connectedUser.getPrincipal());
@@ -130,6 +137,26 @@ public class LoanService {
 
         loan.setStatus(LoanStatus.APPROVED);
 
+        LocalDate dueDate = getNextSaturday();
+        int weeklyPayment = getWeeklyPayment(loan.getAmount(), loan.getWeeks(), loan.getInterestRate());
+        List<LoanInstallment> installments = new ArrayList<>();
+
+        for(int i = 0; i < loan.getWeeks(); i++)
+        {
+            InstallmentStatus status = (i == 0) ? InstallmentStatus.PENDING : InstallmentStatus.DISCOUNT_ELIGIBLE;
+
+            LoanInstallment loanInstallment = LoanInstallment.builder()
+                    .loan(loan)
+                    .installmentNumber(i+1)
+                    .amount(weeklyPayment)
+                    .dueDate(dueDate.plusWeeks(i))
+                    .status(status)
+                    .build();
+
+            installments.add(loanInstallment);
+        }
+        loanInstallmentRepository.saveAll(installments);
+
         return loan.getId();
     }
 
@@ -149,7 +176,7 @@ public class LoanService {
 
         if(!Objects.equals(loan.getCharacter().getId(), character.getId()) && !isAdmin)
         {
-            throw new OperationNotPermittedException("You cannot edit reject someone else loan");
+            throw new OperationNotPermittedException("You cannot reject someone else loan");
         }
 
         boolean hasActiveLoan = loanRepository.findByIdAndStatus(loanId, LoanStatus.ACTIVE).isPresent()
@@ -166,13 +193,18 @@ public class LoanService {
 
     public LocalDate getNextSaturday() {
         LocalDate today = LocalDate.now();
+        LocalDate nextSaturday = today.with(TemporalAdjusters.next(DayOfWeek.SATURDAY));
+        long daysUntilSaturday = ChronoUnit.DAYS.between(today, nextSaturday);
 
-        if (today.getDayOfWeek() == DayOfWeek.SATURDAY) {
-            return today.plusWeeks(1);
+        if (daysUntilSaturday < 5) {
+            return nextSaturday.plusWeeks(1);
         }
-
-        return today.with(TemporalAdjusters.next(DayOfWeek.SATURDAY));
+        return nextSaturday;
     }
 
+    public Integer getWeeklyPayment(int amount, int weeks, double interestRate)
+    {
+        return (amount / weeks) + (int)(amount * interestRate / 100);
+    }
 
 }
