@@ -136,27 +136,6 @@ public class LoanService {
         if (hasActiveLoan) throw new OperationNotPermittedException("You can't accept a loan while you have another one active");
 
         loan.setStatus(LoanStatus.APPROVED);
-
-        LocalDate dueDate = getNextSaturday();
-        int weeklyPayment = getWeeklyPayment(loan.getAmount(), loan.getWeeks(), loan.getInterestRate());
-        List<LoanInstallment> installments = new ArrayList<>();
-
-        for(int i = 0; i < loan.getWeeks(); i++)
-        {
-            InstallmentStatus status = (i == 0) ? InstallmentStatus.PENDING : InstallmentStatus.DISCOUNT_ELIGIBLE;
-
-            LoanInstallment loanInstallment = LoanInstallment.builder()
-                    .loan(loan)
-                    .installmentNumber(i+1)
-                    .amount(weeklyPayment)
-                    .dueDate(dueDate.plusWeeks(i))
-                    .status(status)
-                    .build();
-
-            installments.add(loanInstallment);
-        }
-        loanInstallmentRepository.saveAll(installments);
-
         return loan.getId();
     }
 
@@ -187,6 +166,48 @@ public class LoanService {
 
         loan.setStatus(LoanStatus.REJECTED);
         loanRepository.save(loan);
+        return loan.getId();
+    }
+
+    public Integer activateLoan(Integer loanId, Authentication connectedUser) {
+        User user = ((User) connectedUser.getPrincipal());
+        boolean isAdmin = user.getRoles().stream()
+                .anyMatch(role -> role.getName().equals("ADMIN"));
+
+        if(!isAdmin) throw new OperationNotPermittedException("You don't have access to this");
+
+        Loan loan = loanRepository.findById(loanId)
+                .orElseThrow(() -> new EntityNotFoundException("Loan not found for this id:: " + loanId));
+
+        boolean hasActiveLoan = loanRepository.findByIdAndStatus(loanId, LoanStatus.ACTIVE).isPresent()
+                || loanRepository.findByIdAndStatus(loanId, LoanStatus.WAITING_APPROVAL).isPresent()
+                || loanRepository.findByIdAndStatus(loanId, LoanStatus.PENDING).isPresent()
+                || loanRepository.findByIdAndStatus(loanId, LoanStatus.COMPLETED).isPresent()
+                || loanRepository.findByIdAndStatus(loanId, LoanStatus.REJECTED).isPresent();
+
+        if (hasActiveLoan) throw new OperationNotPermittedException("You can't activate this loan");
+        loan.setStatus(LoanStatus.ACTIVE);
+        loanRepository.save(loan);
+
+        LocalDate dueDate = getNextSaturday();
+        int weeklyPayment = getWeeklyPayment(loan.getAmount(), loan.getWeeks(), loan.getInterestRate());
+        List<LoanInstallment> installments = new ArrayList<>();
+
+        for(int i = 0; i < loan.getWeeks(); i++)
+        {
+            InstallmentStatus status = (i == 0) ? InstallmentStatus.PENDING : InstallmentStatus.DISCOUNT_ELIGIBLE;
+
+            LoanInstallment loanInstallment = LoanInstallment.builder()
+                    .loan(loan)
+                    .installmentNumber(i+1)
+                    .amount(weeklyPayment)
+                    .dueDate(dueDate.plusWeeks(i))
+                    .status(status)
+                    .build();
+
+            installments.add(loanInstallment);
+        }
+        loanInstallmentRepository.saveAll(installments);
         return loan.getId();
     }
 
