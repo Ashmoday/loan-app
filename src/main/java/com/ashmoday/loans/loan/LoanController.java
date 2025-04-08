@@ -1,5 +1,6 @@
 package com.ashmoday.loans.loan;
 
+import com.ashmoday.loans.common.PageResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,5 +31,13 @@ public class LoanController {
             Authentication connectedUser
     ) {
         return ResponseEntity.ok(service.manageLoan(loanId, request, connectedUser));
+    }
+    @GetMapping("loans")
+    public ResponseEntity<PageResponse<LoanResponse>> getAllPendingLoans(
+            @RequestParam(name = "page", defaultValue = "0", required = false) int page,
+            @RequestParam(name = "size", defaultValue = "10", required = false) int size,
+            Authentication connectedUser
+    ) {
+        return ResponseEntity.ok(service.findAllPendingLoans(page, size, connectedUser));
     }
 }
