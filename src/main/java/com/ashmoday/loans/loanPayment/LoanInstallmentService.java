@@ -8,6 +8,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -15,6 +17,8 @@ import java.util.List;
 public class LoanInstallmentService {
     private final LoanInstallmentRepository loanInstallmentRepository;
     private final LoanRepository loanRepository;
+
+
     public void payInstallment(Integer loanInstallmentId, int amount)
     {
         LoanInstallment installment = loanInstallmentRepository.findById(loanInstallmentId)
@@ -28,8 +32,6 @@ public class LoanInstallmentService {
 
         if (installment.getAmount() <= 0) {
             installment.setStatus(InstallmentStatus.PAID);
-        } else {
-            installment.setStatus(InstallmentStatus.PARTIALLY_PAID);
         }
 
         loanInstallmentRepository.save(installment);
@@ -72,5 +74,53 @@ public class LoanInstallmentService {
         loanInstallment.setAmount(0);
         loanInstallment.setStatus(InstallmentStatus.PAID);
         loanInstallmentRepository.save(loanInstallment);
+    }
+
+    public LoanInstallment getActualInstallment(Integer loanId) {
+        Loan loan = loanRepository.findById(loanId)
+                .orElseThrow(() -> new EntityNotFoundException("Loan not found"));
+
+        LoanInstallment loanInstallment = loanInstallmentRepository.findByLoanAndStatusOrderByDueDateAsc(loan, InstallmentStatus.OVERDUE)
+                .stream()
+                .findFirst()
+                .or(() -> loanInstallmentRepository.findByLoanAndStatusOrderByDueDateAsc(loan, InstallmentStatus.PENDING)
+                        .stream()
+                        .findFirst())
+                .or(() -> loanInstallmentRepository.findByLoanAndStatusOrderByDueDateAsc(loan, InstallmentStatus.DISCOUNT_ELIGIBLE)
+                        .stream()
+                        .findFirst())
+                .orElseThrow(() -> new EntityNotFoundException("No valid installment found"));
+
+        return loanInstallment;
+    }
+
+    public int getInstallmentValue(Integer loanId) {
+        Loan loan = loanRepository.findById(loanId)
+                .orElseThrow(() -> new EntityNotFoundException("Loan not found"));
+
+        LoanInstallment loanInstallment = getActualInstallment(loanId);
+        
+        return switch (loanInstallment.getStatus()) {
+            case OVERDUE -> getOverDueFine(loanInstallment);
+            case PENDING -> loanInstallment.getAmount();
+            case DISCOUNT_ELIGIBLE -> getDiscountValue(loanId, loanInstallment.getId());
+            default -> throw new OperationNotPermittedException("You cannot do this to this installment");
+        };
+    }
+
+    public int getOverDueFine(LoanInstallment loanInstallment) {
+        if (loanInstallment.getStatus() != InstallmentStatus.OVERDUE) {
+            throw new OperationNotPermittedException("This installment is not overdue");
+        }
+        LocalDate dueDate = loanInstallment.getDueDate();
+        LocalDate today = LocalDate.now();
+        int overdueTime = (int) Math.max(0, ChronoUnit.DAYS.between(dueDate, today));
+
+        double fineInterest = 0.01; // 1%
+        int fixedFineValue = 500;
+        int fineValue = (int) Math.ceil(loanInstallment.getAmount() * (fineInterest * overdueTime));
+        int installmentOverduePrice = loanInstallment.getAmount() + fineValue + fixedFineValue;
+
+        return installmentOverduePrice;
     }
 }
