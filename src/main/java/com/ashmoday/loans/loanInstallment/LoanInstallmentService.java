@@ -1,16 +1,16 @@
-package com.ashmoday.loans.loanPayment;
+package com.ashmoday.loans.loanInstallment;
 
 import com.ashmoday.loans.exception.OperationNotPermittedException;
 import com.ashmoday.loans.loan.Loan;
 import com.ashmoday.loans.loan.LoanRepository;
-import com.ashmoday.loans.loan.LoanStatus;
+import com.ashmoday.loans.user.User;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -76,7 +76,8 @@ public class LoanInstallmentService {
         loanInstallmentRepository.save(loanInstallment);
     }
 
-    public LoanInstallment getActualInstallment(Integer loanId) {
+    public LoanInstallment getActualInstallment(Integer loanId, Authentication connectedUser) {
+        User user = ((User) connectedUser.getPrincipal());
         Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new EntityNotFoundException("Loan not found"));
 
@@ -99,7 +100,7 @@ public class LoanInstallmentService {
                 .orElseThrow(() -> new EntityNotFoundException("Loan not found"));
 
         LoanInstallment loanInstallment = getActualInstallment(loanId);
-        
+
         return switch (loanInstallment.getStatus()) {
             case OVERDUE -> getOverDueFine(loanInstallment);
             case PENDING -> loanInstallment.getAmount();

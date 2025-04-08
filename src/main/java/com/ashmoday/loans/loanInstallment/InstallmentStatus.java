@@ -1,4 +1,4 @@
-package com.ashmoday.loans.loanPayment;
+package com.ashmoday.loans.loanInstallment;
 
 public enum InstallmentStatus {
     DISCOUNT_ELIGIBLE,

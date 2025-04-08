@@ -1,4 +1,4 @@
-package com.ashmoday.loans.loanPayment;
+package com.ashmoday.loans.loanInstallment;
 
 import com.ashmoday.loans.loan.Loan;
 import org.springframework.data.jpa.repository.JpaRepository;

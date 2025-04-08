@@ -1,4 +1,4 @@
-package com.ashmoday.loans.loanPayment;
+package com.ashmoday.loans.loanInstallment;
 
 import com.ashmoday.loans.common.BaseEntity;
 import com.ashmoday.loans.loan.Loan;
