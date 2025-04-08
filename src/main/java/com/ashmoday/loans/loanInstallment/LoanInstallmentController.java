@@ -1,0 +1,28 @@
+package com.ashmoday.loans.loanInstallment;
+
+import com.ashmoday.loans.character.CharacterResponse;
+import com.ashmoday.loans.common.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("loan-payment")
+@RequiredArgsConstructor
+@Tag(name = "Loan Payment")
+public class LoanInstallmentController {
+    private final LoanInstallmentService service;
+
+    @GetMapping
+    public ResponseEntity<PageResponse<CharacterResponse>> getInstalmentValue(
+            Integer loanId,
+            Authentication connectedUser
+    ) {
+        return ResponseEntity.ok(service.getInstallmentValue(loanId, connectedUser));
+    }
+}
