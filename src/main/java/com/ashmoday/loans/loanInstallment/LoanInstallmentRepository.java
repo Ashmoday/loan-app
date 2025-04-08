@@ -9,4 +9,5 @@ import java.util.List;
 public interface LoanInstallmentRepository extends JpaRepository<LoanInstallment, Integer>, JpaSpecificationExecutor<LoanInstallment> {
     List<LoanInstallment> findByLoanAndStatus(Loan loan, InstallmentStatus installmentStatus);
     List<LoanInstallment> findByLoanAndStatusOrderByDueDateAsc(Loan loan, InstallmentStatus installmentStatus);
+    List<LoanInstallment> findAllByLoan(Loan loan);
 }
