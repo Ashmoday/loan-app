@@ -3,7 +3,7 @@ package com.ashmoday.loans.loan;
 import com.ashmoday.loans.character.Character;
 import com.ashmoday.loans.collateral.Collateral;
 import com.ashmoday.loans.common.BaseEntity;
-import com.ashmoday.loans.loanPayment.LoanInstallment;
+import com.ashmoday.loans.loanInstallment.LoanInstallment;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
