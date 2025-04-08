@@ -39,7 +39,7 @@ public class AuthenticationService {
         User user = User.builder()
                 .username(userRequest.getUsername())
                 .ucpId(userRequest.getId())
-                .password(passwordEncoder.encode("123456"))
+                .password(passwordEncoder.encode(userRequest.getPassword()))
                 .roles(Set.of(userRole))
                 .build();
 
