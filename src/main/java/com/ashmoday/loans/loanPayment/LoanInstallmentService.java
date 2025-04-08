@@ -35,7 +35,7 @@ public class LoanInstallmentService {
         loanInstallmentRepository.save(installment);
     }
 
-    public int getEarlyPayment(Integer loanId, Integer installmentId) {
+    public int getDiscountValue(Integer loanId, Integer installmentId) {
         Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new EntityNotFoundException("Loan not found"));
         LoanInstallment loanInstallment = loanInstallmentRepository.findById(installmentId)
@@ -49,5 +49,28 @@ public class LoanInstallmentService {
         int discountedPayment = loanInstallment.getAmount() - (discountRate / 2);
 
         return discountedPayment;
+    }
+
+    public void payEarly(Integer loanId, Integer installmentId, int paymentAmount) {
+        Loan loan = loanRepository.findById(loanId)
+                .orElseThrow(() -> new EntityNotFoundException("Loan not found"));
+        LoanInstallment loanInstallment = loanInstallmentRepository.findById(installmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
+
+        boolean discountEligible = loanInstallment.getStatus() == InstallmentStatus.DISCOUNT_ELIGIBLE;
+
+        if(!discountEligible) throw new OperationNotPermittedException("This installment is not eligible for discount");
+
+        int discountedPayment = getDiscountValue(loanId, installmentId);
+
+        if (paymentAmount < discountedPayment)
+        {
+            loanInstallment.setAmount(loanInstallment.getAmount() - paymentAmount);
+            loanInstallmentRepository.save(loanInstallment);
+            return;
+        }
+        loanInstallment.setAmount(0);
+        loanInstallment.setStatus(InstallmentStatus.PAID);
+        loanInstallmentRepository.save(loanInstallment);
     }
 }
