@@ -98,6 +98,10 @@ public class LoanService {
 
     public PageResponse<LoanResponse> findAllPendingLoans(int page, int size, Authentication connectedUser) {
         User user = (User) connectedUser.getPrincipal();
+        boolean isAdmin = user.getRoles().stream()
+                .anyMatch(role -> role.getName().equals("ADMIN"));
+
+        if(!isAdmin) throw new OperationNotPermittedException("You can't access this");
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Loan> loans = loanRepository.findByStatus(LoanStatus.PENDING, pageable);
         List<LoanResponse> loanResponse = loans.stream()
