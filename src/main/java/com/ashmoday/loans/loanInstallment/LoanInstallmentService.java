@@ -11,19 +11,20 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class LoanInstallmentService {
     private final LoanInstallmentRepository loanInstallmentRepository;
     private final LoanRepository loanRepository;
-
+    private final InstallmentMapper installmentMapper;
 
     public void payInstallment(Integer loanInstallmentId, int amount)
     {
+
         LoanInstallment installment = loanInstallmentRepository.findById(loanInstallmentId)
                 .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
-
         if (installment.getStatus() == InstallmentStatus.PAID) {
             throw new IllegalArgumentException("Installment is already paid.");
         }
@@ -76,8 +77,7 @@ public class LoanInstallmentService {
         loanInstallmentRepository.save(loanInstallment);
     }
 
-    public LoanInstallment getActualInstallment(Integer loanId, Authentication connectedUser) {
-        User user = ((User) connectedUser.getPrincipal());
+    public LoanInstallment getActualInstallment(Integer loanId) {
         Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new EntityNotFoundException("Loan not found"));
 
@@ -123,5 +123,16 @@ public class LoanInstallmentService {
         int installmentOverduePrice = loanInstallment.getAmount() + fineValue + fixedFineValue;
 
         return installmentOverduePrice;
+    }
+
+    public List<LoanInstallmentResponse> getAllInstallments(Integer loanId) {
+        Loan loan = loanRepository.findById(loanId)
+                .orElseThrow(() -> new EntityNotFoundException("Loan not found"));
+        List<LoanInstallmentResponse> loanInstallmentResponses = loanInstallmentRepository.findAllByLoan(loan)
+                .stream()
+                .map(installmentMapper::toLoanInstallmentResponse)
+                .toList();
+
+        return loanInstallmentResponses;
     }
 }
