@@ -11,18 +11,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("loan-payment")
 @RequiredArgsConstructor
-@Tag(name = "Loan Payment")
+@Tag(name = "Installment Payment")
 public class LoanInstallmentController {
     private final LoanInstallmentService service;
 
-    @GetMapping
-    public ResponseEntity<PageResponse<CharacterResponse>> getInstalmentValue(
-            Integer loanId,
-            Authentication connectedUser
+    @GetMapping("installment-value")
+    public ResponseEntity<Integer> getInstalmentValue(
+            Integer loanId
     ) {
-        return ResponseEntity.ok(service.getInstallmentValue(loanId, connectedUser));
+        return ResponseEntity.ok(service.getInstallmentValue(loanId));
+    }
+    @GetMapping("installments")
+    public ResponseEntity<List<LoanInstallmentResponse>> getAllInstalments(
+            Integer loanId
+    ) {
+        return ResponseEntity.ok(service.getAllInstallments(loanId));
     }
 }
