@@ -20,7 +20,7 @@ public class LoanInstallmentService {
     private final LoanRepository loanRepository;
     private final InstallmentMapper installmentMapper;
 
-    public void payInstallment(Integer loanInstallmentId, int amount)
+    public Integer payInstallment(Integer loanInstallmentId, int amount)
     {
 
         LoanInstallment installment = loanInstallmentRepository.findById(loanInstallmentId)
@@ -36,6 +36,7 @@ public class LoanInstallmentService {
         }
 
         loanInstallmentRepository.save(installment);
+        return loanInstallmentId;
     }
 
     public int getDiscountValue(Integer loanId, Integer installmentId) {
